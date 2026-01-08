@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#0b1220" />
+  <meta name="description" content="WeatherWise - Dein intelligenter Wetter-Assistent mit personalisierten Empfehlungen" />
+  <title>WeatherWise</title>
+
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+
+<body>
+  <div class="bg-gradient" id="bgGradient"></div>
+
+  <main class="app" role="main" aria-live="polite">
+    <header class="header">
+      <div class="header-left">
+        <h1 class="title">WeatherWise</h1>
+        <p class="meta" id="metaLine">—</p>
+      </div>
+
+      <button class="btn-refresh" id="btnRefresh" type="button" aria-label="Wetter aktualisieren">
+        <span class="icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <path d="M17.65 6.35A7.95 7.95 0 0 0 12 4V1L7 6l5 5V7a6 6 0 1 1-6 6H4a8 8 0 1 0 13.65-6.65z"/>
+          </svg>
+        </span>
+        Aktualisieren
+      </button>
+    </header>
+
+    <!-- HEUTE / JETZT (Hauptkarte) -->
+    <section class="weather-card" id="weatherCard">
+      <div class="card-label">Heute</div>
+      <h2 class="weather-headline" id="summaryLine">Wetter wird geladen…</h2>
+      <div class="weather-icon" id="weatherIcon">🌤️</div>
+      <div class="recommendation" id="recommendationLine">—</div>
+      <p class="insight" id="insightLine"></p>
+
+      <!-- Impact + Badges -->
+      <div class="impact" id="impactBox" hidden>
+        <div class="impact__row">
+          <span class="impact__label">Impact</span>
+          <span class="impact__value" id="impactValue">–</span>
+        </div>
+        <div class="impact__bar" aria-hidden="true">
+          <div class="impact__fill" id="impactFill" style="width:0%"></div>
+        </div>
+        <div class="badges" id="badgesBox"></div>
+      </div>
+
+      <!-- Wetterdetails -->
+      <div class="details" id="detailsBox" hidden>
+        <div class="detail-item">
+          <span class="detail-label">Temperatur</span>
+          <span class="detail-value" id="tempValue">—</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Gefühlt</span>
+          <span class="detail-value" id="feelsLikeValue">—</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Wind</span>
+          <span class="detail-value" id="windValue">—</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Zustand</span>
+          <span class="detail-value" id="condValue">—</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- FORECAST (separate Karte, nicht in der Heute-Karte) -->
+    <section class="forecast-card" aria-label="Forecast">
+      <div class="forecast-head">
+        <button
+          class="toggle"
+          id="btnToggleHourly"
+          type="button"
+          aria-expanded="false"
+          aria-controls="hourlyBox">
+          <span class="icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm1 11h5v-2h-4V6h-2v7z"/></svg>
+          </span>
+          Tagesverlauf 
+        </button>
+
+        <button
+          class="toggle"
+          id="btnToggleDaily"
+          type="button"
+          aria-expanded="false"
+          aria-controls="dailyBox">
+          <span class="icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M7 2h2v2h6V2h2v2h3v18H4V4h3V2zm13 6H4v12h16V8z"/></svg>
+          </span>
+          7‑Tage
+        </button>
+      </div>
+
+      <div class="forecast-body" id="hourlyBox" hidden>
+        <div class="hourly" id="hourlyGrid"></div>
+      </div>
+
+      <div class="forecast-body" id="dailyBox" hidden>
+        <div class="daily" id="dailyGrid"></div>
+      </div>
+
+      <p class="forecast-hint" id="forecastStatus">Forecast wird erst geladen, wenn du ihn öffnest.</p>
+    </section>
+
+    <!-- Standort -->
+    <section class="location-card">
+      <h3 class="location-title">📍 Standort wählen</h3>
+
+      <div class="control-row">
+        <button class="btn" id="btnGeo" type="button">
+          <span class="icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5z"/></svg>
+          </span>
+          Automatisch erkennen
+        </button>
+      </div>
+
+      <form class="city-form" id="cityForm">
+        <label class="sr-only" for="cityInput">Stadt eingeben</label>
+        <input
+          id="cityInput"
+          class="city-input"
+          type="text"
+          placeholder="z. B. Berlin"
+          autocomplete="address-level2"
+        />
+        <button class="btn" type="submit">
+          <span class="icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M10 2a8 8 0 1 0 4.9 14.3l4.4 4.4 1.4-1.4-4.4-4.4A8 8 0 0 0 10 2zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12z"/></svg>
+          </span>
+          Suchen
+        </button>
+      </form>
+
+      <div class="status-line" id="statusLine">
+        Bereit. Standort erlauben oder Stadt eingeben.
+      </div>
+    </section>
+  </main>
+
+<script src="./config.js"></script>
+<script src="./logic.js"></script>
+<script src="./app.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,778 @@
+/**
+ * WeatherWise - Stylesheet
+ * Modernes Design mit Glassmorphism, Animationen und responsive Layout
+ */
+
+/* ============================================================================
+   CSS VARIABLES (Design Tokens)
+   ========================================================================== */
+:root {
+  /* Farben */
+  --bg: #0b1220;
+  --card: #111a2e;
+  --text: #e7edf7;
+  --text-secondary: #a9b6cc;
+  --accent: #67e8f9;
+  --accent-glow: rgba(103, 232, 249, 0.3);
+  --danger: #fb7185;
+  --success: #4ade80;
+  --warning: #fbbf24;
+
+  /* Abstände & Größen */
+  --radius: 20px;
+  --radius-sm: 12px;
+  --shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+
+  /* Animationen */
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ============================================================================
+   RESET & BASE
+   ========================================================================== */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+  position: relative;
+  line-height: 1.6;
+}
+
+/* ============================================================================
+   ANIMIERTE HINTERGRÜNDE (wetterabhängig)
+   ========================================================================== */
+.bg-gradient {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 1s ease;
+}
+
+.bg-gradient.active {
+  opacity: 1;
+}
+
+/* Sonnig / Klar */
+.bg-gradient.clear {
+  background: radial-gradient(circle at 30% 20%, rgba(255, 200, 50, 0.15), transparent 50%),
+    radial-gradient(circle at 70% 80%, rgba(255, 150, 100, 0.1), transparent 50%),
+    radial-gradient(1200px 800px at 20% 0%, #1a2540, var(--bg));
+}
+
+/* Regen */
+.bg-gradient.rain {
+  background: radial-gradient(circle at 50% 20%, rgba(100, 150, 200, 0.15), transparent 60%),
+    radial-gradient(1200px 800px at 20% 0%, #142043, var(--bg));
+}
+
+/* Schnee */
+.bg-gradient.snow {
+  background: radial-gradient(circle at 30% 30%, rgba(200, 220, 255, 0.2), transparent 50%),
+    radial-gradient(1200px 800px at 20% 0%, #1a2847, var(--bg));
+}
+
+/* Bewölkt */
+.bg-gradient.clouds {
+  background: radial-gradient(circle at 50% 30%, rgba(120, 140, 170, 0.12), transparent 60%),
+    radial-gradient(1200px 800px at 20% 0%, #141f38, var(--bg));
+}
+
+/* Gewitter */
+.bg-gradient.thunderstorm {
+  background: radial-gradient(circle at 40% 40%, rgba(150, 100, 200, 0.15), transparent 50%),
+    radial-gradient(1200px 800px at 20% 0%, #1a1540, var(--bg));
+}
+
+/* ============================================================================
+   LAYOUT
+   ========================================================================== */
+.app {
+  /* Desktop wirkt sonst zu schmal/leer */
+  max-width: 920px;
+  margin: 0 auto;
+  padding: clamp(16px, 4vw, 24px);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ============================================================================
+   HEADER
+   ========================================================================== */
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 8px 0;
+}
+
+.header-left {
+  flex: 1;
+}
+
+.title {
+  font-size: clamp(24px, 5vw, 32px);
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  background: linear-gradient(135deg, var(--text) 0%, var(--accent) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 6px;
+}
+
+.meta {
+  color: var(--text-secondary);
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+.btn-refresh {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text);
+  padding: 12px 20px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: var(--transition);
+  white-space: nowrap;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-refresh:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.btn-refresh:active {
+  transform: translateY(0);
+}
+
+.btn-refresh.loading {
+  pointer-events: none;
+  opacity: 0.6;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* ============================================================================
+   HAUPTWETTERKARTE
+   ========================================================================== */
+.weather-card {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.08) 0%,
+    rgba(255, 255, 255, 0.03) 100%
+  );
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius);
+  padding: clamp(20px, 5vw, 32px);
+  box-shadow: var(--shadow);
+  position: relative;
+  overflow: hidden;
+  transition: var(--transition);
+  backdrop-filter: blur(10px);
+}
+
+/* Farbbalken oben */
+.weather-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--accent), var(--success));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.weather-card.loaded::before {
+  opacity: 1;
+}
+
+.card-label {
+  color: var(--text-secondary);
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  opacity: 0.7;
+}
+
+.weather-headline {
+  font-size: clamp(28px, 6vw, 36px);
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 16px;
+  letter-spacing: -0.5px;
+}
+
+.weather-icon {
+  font-size: 64px;
+  margin: 16px 0;
+  filter: drop-shadow(0 0 20px var(--accent-glow));
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.recommendation {
+  font-size: clamp(18px, 4vw, 22px);
+  line-height: 1.4;
+  color: var(--accent);
+  margin: 20px 0;
+  padding: 16px;
+  background: rgba(103, 232, 249, 0.08);
+  border-radius: var(--radius-sm);
+  border-left: 4px solid var(--accent);
+  font-weight: 500;
+}
+
+.insight {
+  color: var(--text-secondary);
+  font-size: 16px;
+  font-style: italic;
+  margin-top: 16px;
+  opacity: 0.9;
+}
+
+.insight::before {
+  content: "💡 ";
+}
+
+/* ============================================================================
+   IMPACT SCORE + BADGES
+   ========================================================================== */
+.impact {
+  margin-top: 18px;
+  padding: 14px;
+  border-radius: var(--radius-sm);
+  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.impact__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.impact__label {
+  font-size: 12px;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.impact__value {
+  font-weight: 700;
+}
+
+.impact__bar {
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.impact__fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--success), var(--warning), var(--danger));
+  transition: width 0.35s ease;
+}
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.badge {
+  font-size: 13px;
+  padding: 8px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.badge--danger {
+  border-color: rgba(251, 113, 133, 0.35);
+  background: rgba(251, 113, 133, 0.1);
+}
+
+.badge--warn {
+  border-color: rgba(251, 191, 36, 0.35);
+  background: rgba(251, 191, 36, 0.1);
+}
+
+/* ============================================================================
+   WETTERDETAILS GRID
+   ========================================================================== */
+.details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.detail-item {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  transition: var(--transition);
+}
+
+.detail-item:hover {
+  background: rgba(0, 0, 0, 0.3);
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
+}
+
+.detail-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.detail-value {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text);
+  display: block;
+}
+
+/* ============================================================================
+   STANDORT-STEUERUNG
+   ========================================================================== */
+.location-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius);
+  padding: clamp(16px, 4vw, 24px);
+}
+
+.location-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: var(--text);
+}
+
+.control-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  flex: 1;
+  min-width: 140px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--text);
+  padding: 14px 20px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 500;
+  transition: var(--transition);
+  white-space: nowrap;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+/* Stadtsuche-Formular */
+.city-form {
+  display: flex;
+  gap: 12px;
+}
+
+.city-input {
+  flex: 1;
+  padding: 14px 16px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.3);
+  color: var(--text);
+  font-size: 15px;
+  transition: var(--transition);
+}
+
+.city-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.city-input::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.5;
+}
+
+/* Status-Zeile */
+.status-line {
+  margin-top: 12px;
+  font-size: 14px;
+  color: var(--text-secondary);
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  background: rgba(0, 0, 0, 0.2);
+  transition: var(--transition);
+}
+
+.status-line.error {
+  color: var(--danger);
+  background: rgba(251, 113, 133, 0.1);
+  border: 1px solid rgba(251, 113, 133, 0.2);
+}
+
+.status-line.success {
+  color: var(--success);
+  background: rgba(74, 222, 128, 0.1);
+  border: 1px solid rgba(74, 222, 128, 0.2);
+}
+
+/* ============================================================================
+   ICONS (Inline SVG)
+   ========================================================================== */
+.icon {
+  display: inline-flex;
+  width: 18px;
+  height: 18px;
+  margin-right: 10px;
+  vertical-align: middle;
+}
+.icon svg {
+  width: 100%;
+  height: 100%;
+  fill: currentColor;
+  opacity: 0.9;
+}
+
+/* ============================================================================
+   FORECAST (Tagesverlauf + 7 Tage)
+   ========================================================================== */
+.forecast-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius);
+  padding: 14px;
+}
+
+.forecast-head {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.toggle {
+  flex: 1;
+  min-width: 180px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.toggle:hover {
+  background: rgba(255, 255, 255, 0.09);
+  transform: translateY(-1px);
+}
+
+.toggle[aria-expanded="true"] {
+  border-color: rgba(103, 232, 249, 0.35);
+  background: rgba(103, 232, 249, 0.1);
+}
+
+.forecast-body {
+  margin-top: 12px;
+}
+
+.forecast-hint {
+  margin: 8px 0 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+/* Hourly: smooth + app-like (snap), scrollbar schön & minimal */
+.hourly{
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 160px;     /* feste Card-Breite = ruhiger */
+  gap: 12px;
+
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  padding: 6px 10px 14px;       /* Platz für Scrollbar */
+  margin: 0 -10px;              /* “edge-to-edge” Look in der Card */
+
+  scroll-snap-type: x mandatory; /* snap = fühlt sich nicht reingelaggt an [web:261] */
+  scroll-padding-left: 10px;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Jede Hour-Card snappt sauber */
+.hour{
+  scroll-snap-align: start;      /* [web:261] */
+  background: rgba(0,0,0,0.18);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+  padding: 12px;
+
+  min-height: 92px;
+}
+
+/* Hover nur Desktop */
+@media (hover:hover){
+  .hour:hover{
+    background: rgba(0,0,0,0.26);
+    border-color: rgba(255,255,255,0.14);
+    transform: translateY(-1px);
+    transition: var(--transition);
+  }
+}
+
+/* Scrollbar: dünn, clean */
+.hourly{
+  scrollbar-width: thin; /* Firefox [web:205] */
+  scrollbar-color: rgba(103,232,249,.35) rgba(255,255,255,.08);
+}
+
+.hourly::-webkit-scrollbar{
+  height: 8px; /* Chrome/Safari [web:204] */
+}
+
+.hourly::-webkit-scrollbar-thumb{
+  background: rgba(103,232,249,.35);
+  border-radius: 999px;
+  border: 2px solid rgba(0,0,0,0.25);
+}
+
+.hourly::-webkit-scrollbar-track{
+  background: rgba(255,255,255,.06);
+  border-radius: 999px;
+}
+
+/* Optional: “Fade edges”, damit man sieht dass man scrollen kann */
+.forecast-body{
+  position: relative;
+}
+
+.forecast-body::before,
+.forecast-body::after{
+  content:"";
+  position:absolute;
+  top: 0;
+  bottom: 16px; /* nicht über scrollbar */
+  width: 22px;
+  pointer-events:none;
+  z-index: 2;
+}
+
+.forecast-body::before{
+  left: 0;
+  background: linear-gradient(90deg, rgba(11,18,32,0.95), rgba(11,18,32,0));
+}
+
+.forecast-body::after{
+  right: 0;
+  background: linear-gradient(270deg, rgba(11,18,32,0.95), rgba(11,18,32,0));
+}
+
+
+.hour {
+  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 12px;
+}
+
+.hour__t {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+.hour__temp {
+  font-size: 18px;
+  font-weight: 700;
+  margin-top: 6px;
+}
+.hour__mini {
+  color: var(--text-secondary);
+  font-size: 12px;
+  margin-top: 6px;
+}
+
+/* Daily cards */
+.daily {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 10px;
+}
+
+.day {
+  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 12px;
+}
+
+.day__date {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+.day__temp {
+  font-size: 16px;
+  font-weight: 700;
+  margin-top: 6px;
+}
+.day__mini {
+  color: var(--text-secondary);
+  font-size: 12px;
+  margin-top: 6px;
+}
+
+/* ============================================================================
+   ANIMATIONEN
+   ========================================================================== */
+.loading-pulse {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================================================
+   ACCESSIBILITY
+   ========================================================================== */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+/* ============================================================================
+   RESPONSIVE DESIGN
+   ========================================================================== */
+@media (max-width: 480px) {
+  .app {
+    max-width: 680px; /* auf Mobile wieder kompakt */
+  }
+
+  .control-row {
+    flex-direction: column;
+  }
+
+  .btn {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .city-form {
+    flex-direction: column;
+  }
+
+  .header {
+    flex-wrap: wrap;
+  }
+
+  .hourly {
+    grid-auto-columns: minmax(130px, 1fr);
+  }
+}
+
+/* Reduzierte Bewegung */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
