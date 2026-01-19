@@ -1,1 +1,2 @@
-config.js
+weather-backend/node_modules/
+weather-backend/.env
