@@ -18,8 +18,8 @@ KONFIGURATION
 ============================================================================ */
 
 
-const BASE_WEATHER_URL = "http://localhost:3001/api/weather";
-const BASE_GEO_URL = "http://localhost:3001/api/geocode";
+const BASE_WEATHER_URL = "https://weatherwise-yxnb.onrender.com/api/weather";
+const BASE_GEO_URL = "https://weatherwise-yxnb.onrender.com/api/geocode";
 
 
 const OPEN_METEO_URL = "https://api.open-meteo.com/v1/forecast";
